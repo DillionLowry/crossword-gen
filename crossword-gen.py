@@ -1,5 +1,6 @@
 import random
 import re
+import string
 
 class Coord(object):
     def __init__(self, start, end, vert, num):
@@ -25,6 +26,9 @@ class Word(object):
         self.coord = coord
         self.text = word_tuple[0]
         self.clue = word_tuple[1]
+
+    def __str__(self):
+        return self.text
 
 class Board(object):
     def __init__(self, shape):
@@ -148,15 +152,30 @@ def generate_crossword(board, wordlist):
                 collision_list.append(coll)
     
     '''
-    find_spot(board, board.coords[0], collision_list, wordlist)
-
-    print("hello what the fuck")
+    #completed = True
+    completed = find_spot(board, board.coords[0], collision_list, wordlist)
+    print(completed)
     
     for coord in collision_list:
         print("c- ", coord)
     
+
+def find_and_place(board, collision_list, wordlist):
+    for coord in board.coords:
+        for col in coord.collisions:
+            if col and col not in collision_list:
+                collision_list.append(col)
+                find_and_place(board, collision_list, wordlist)
+        
+
+
+
+
+
 def find_spot(board, coord, collision_list, wordlist):
-    #all_placed = True
+    placed = False
+    attemps_to_place=0
+
     print("FINDING A SPOT")
     print(coord)
     if coord == None:
@@ -166,35 +185,85 @@ def find_spot(board, coord, collision_list, wordlist):
             #all_placed = False
             collision_list.append(col)
             find_spot(board, col, collision_list, wordlist)
+    while not placed and attemps_to_place <100:
+        tried_words=[]
+        constraints = ""
+        # only add the first character of the constraint in the case that it is a two+ digit number
+        for x in range(coord.length):
+            if coord.vertical:
+                constraints += str(board.generated[coord.start[0]+x][coord.start[1]])[0]
+            else:
+                constraints += str(board.generated[coord.start[0]][coord.start[1]+x])[0]
+        print("constraints are: ", constraints)
 
-    constraints = "test"
-    place_word(board,coord,wordlist, None)
+        placed, tried_words = place_word(board,coord,wordlist, constraints, tried_words)
+        attemps_to_place+=1
+    return placed
    
-def place_word(board, coord, words, constraints):
+def place_word(board, coord, words, constraints, tried):
     if constraints==None:
         print(coord.length)
         word = words[coord.length-2][random.randrange(len(words[coord.length-2]))]
-        print(word)
-        for x in range(coord.length):
-            if coord.vertical:
-                board.generated[coord.start[0]+x][coord.start[1]] = word[0][x]
+    else:
+        # Generate regex from the constraints
+        regex = "^"
+        for char in constraints:
+            if char in string.ascii_lowercase:
+                regex+=char
             else:
-                board.generated[coord.start[0]][coord.start[1]+x] = word[0][x]
+                regex+="."
+        print(regex)
+        found_matches = [word for word in words[len(constraints)-2] if re.match(regex, word[0]) is not None]
+        '''
+        for match in found_matches:
+            print(match)
+            print(type(match))
+        '''
+        # no matches found, or all tried and failed
+        if len(found_matches)==0 or len(found_matches)==len(tried):
+            print("Didn't find any matches")
+            return False, tried
+        print("num matches found ",len(found_matches))
+        #TODO, CHECK THAT THE WORD WORKS AND HASN'T BEEN TRIED BEFORE
+        word = found_matches[random.randrange(len(found_matches))]
+        while word in tried:
+            word = found_matches[random.randrange(len(found_matches))]
+        tried.append(word)
+        
+    print("THE FOUND WORD IS: ",word)
+    for x in range(coord.length):
+        #print(x)
+        print(word[0][x])
+        print(coord.start[0], " ", coord.start[1])
+        if coord.vertical:
+            board.generated[coord.start[0]+x][coord.start[1]] = word[0][x]
+        else:
+            board.generated[coord.start[0]][coord.start[1]+x] = word[0][x]
 
+    board.print_board()
+
+    return True, tried
 
 
 def main():
     #filename = input("Input file name: ")
-    filename = "vocab.txt"
+    filename = "words.txt"
     f = open(filename, "r")
 
     # Wordlist is a 2d list of tuples
     # 0 index is two letter words, max length of 16 letters at index 14
     wordlist = [[] for x in range(15)]
 
-    while True:
-        word = f.readline().strip()
-        definition = f.readline().strip()
+    #while True:
+    for x in range(128000):
+        try:
+            word = f.readline().strip().lower()
+        except:
+            continue
+        if len(word) <2 or len(word) > 14:
+            continue
+        #definition = f.readline().strip()
+        definition = "Testing values"
         if not word:
             break
         wordlist[len(word)-2].append((word,definition))
