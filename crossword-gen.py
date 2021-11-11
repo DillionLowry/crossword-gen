@@ -1,6 +1,7 @@
 import random
 import re
 import string
+from copy import deepcopy
 
 class Coord(object):
     def __init__(self, start, end, vert, num):
@@ -37,6 +38,7 @@ class Board(object):
         self.coords = []
         self.width = len(shape[0])
         self.height = len(shape)
+        self.collision_list = []
 
     def add_coord(self, coord):
         self.coords.append(coord)
@@ -52,8 +54,8 @@ class Board(object):
     
     def print_board(self):
         for row in self.generated:
-            for char in row:
-                print(char, end='')
+            for item in row:
+                print(str(item)[0], end='')
             print()
 
 def generate_coordinates(crossword):
@@ -129,14 +131,29 @@ def generate_coordinates(crossword):
                         continue
             #print(r, "  ", c)
 
-def generate_collisions(board):
-    for coord in board.coords:
-        pass
-    
+def generate_collisions(board, coord):
+    ''' old method
+    collision_list = [board.coords[0]]
+    for coord in board.coords[0].collisions:
+        collision_list.append(coord)
+    for coord in collision_list:
+        for col in coord.collisions:
+            if col and col not in collision_list:
+                collision_list.append(col)
+    return collision_list
+    '''
+    if coord not in board.collision_list:
+        #print("generating ",coord)
+        board.collision_list.append(coord)
+        for coll in coord.collisions:
+            generate_collisions(board,coll)
+    else:
+        return
+
 def generate_crossword(board, wordlist):
     
     tried_words = set()
-    collision_list = []
+    colls = []
 
     #place first word
     #place_word(board, board.coords[0], wordlist, None)
@@ -153,22 +170,70 @@ def generate_crossword(board, wordlist):
     
     '''
     #completed = True
-    completed = find_spot(board, board.coords[0], collision_list, wordlist)
-    print(completed)
+    #completed = find_spot(board, board.coords[0], collision_list, wordlist)
+    #print(completed)
+    #colls=generate_collisions(board, board.coords[0])
+    #board = find_and_place2(board, board,colls,wordlist)
+    generate_collisions(board, board.coords[0])
+    colls = board.collision_list
+
+    find_and_place(board,board,colls,wordlist)
+
+    #for coord in colls:
+        #print("c- ", coord)
+    return board
     
-    for coord in collision_list:
-        print("c- ", coord)
-    
+def find_and_place(board, new_board, collision_list, wordlist):
 
-def find_and_place(board, collision_list, wordlist):
-    for coord in board.coords:
-        for col in coord.collisions:
-            if col and col not in collision_list:
-                collision_list.append(col)
-                find_and_place(board, collision_list, wordlist)
-        
+    if len(collision_list) > 0:
+        print("----------START --------------",collision_list[0],"LENGTH:",len(collision_list))
 
+    found = False
+    copy = deepcopy(new_board)
 
+    # we handled all collisions
+    if collision_list==[]:
+        print("MADE IT TO EMPTY LIST")
+        board.generated = new_board.generated
+        return True
+
+    constraints = ""
+    # only add the first character of the constraint in the case that it is a two+ digit number
+    for x in range(collision_list[0].length):
+        if collision_list[0].vertical:
+            constraints += str(copy.generated[collision_list[0].start[0]+x][collision_list[0].start[1]])[0]
+        else:
+            constraints += str(copy.generated[collision_list[0].start[0]][collision_list[0].start[1]+x])[0]
+    print("constraints are:", constraints)
+
+    # Generate regex from the constraints
+    regex = ""
+    for char in constraints:
+        if char in string.ascii_lowercase:
+            regex+=char
+        else:
+            regex+="."
+    print(regex)
+    found_matches = [word for word in wordlist[len(constraints)-2] if re.match(regex, word[0]) is not None]
+
+    for word in found_matches:
+        # place the word down
+        for x in range(collision_list[0].length):
+            #print(x)
+            #print(word[0][x])
+            #print(collision_list[0].start[0], " ", collision_list[0].start[1])
+            if collision_list[0].vertical:
+                copy.generated[collision_list[0].start[0]+x][collision_list[0].start[1]] = word[0][x]
+            else:
+                copy.generated[collision_list[0].start[0]][collision_list[0].start[1]+x] = word[0][x]
+            
+        copy.print_board()
+        found = find_and_place(board,copy,collision_list[1:], wordlist)
+        if found:
+            print("-------------------------------------------------------------------- found")
+            return True
+        print("Returning False for:",word)
+    return False
 
 
 
@@ -247,7 +312,7 @@ def place_word(board, coord, words, constraints, tried):
 
 def main():
     #filename = input("Input file name: ")
-    filename = "words.txt"
+    filename = "words2.txt"
     f = open(filename, "r")
 
     # Wordlist is a 2d list of tuples
@@ -308,7 +373,23 @@ def main():
             ["-","X","X","X","X"],
             ["-","-","-","-","X"]]
 
-    crossword = Board(test3)
+    test5 = [["-","-","-","-","X","X","-","-","-","-","X","-","-","-","-",],
+            ["-","-","-","-","-","X","-","-","-","-","-","-","-","-","-",],
+            ["-","-","-","-","-","X","-","-","-","-","-","-","-","-","-",],
+            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","X",],
+            ["-","-","-","-","-","-","-","X","X","X","X","-","-","-","-",],
+            ["X","X","X","-","-","-","X","-","-","-","-","-","-","-","-",],
+            ["-","-","-","-","X","-","-","-","-","-","-","X","-","-","-",],
+            ["-","-","-","X","-","-","-","-","-","-","-","X","-","-","-",],
+            ["-","-","-","X","-","-","-","-","-","-","X","-","-","-","-",],
+            ["-","-","-","-","-","-","-","-","X","-","-","-","X","X","X",],
+            ["-","-","-","-","X","X","X","X","-","-","-","-","-","-","-",],
+            ["X","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
+            ["-","-","-","-","-","-","-","-","-","X","-","-","-","-","-",],
+            ["-","-","-","-","-","-","-","-","-","X","-","-","-","-","-",],
+            ["-","-","-","-","X","-","-","-","-","X","X","-","-","-","-",]]
+
+    crossword = Board(test5)
     generate_coordinates(crossword)
     crossword.print_coords()
     crossword.print_board()
