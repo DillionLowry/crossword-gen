@@ -22,7 +22,9 @@ class Coord(object):
             return "down"
         else:
             return "across"
-
+    
+    def get_number(self):
+        return self.number
 
 class Word(object):
     def __init__(self, coord, word_tuple):
@@ -31,7 +33,7 @@ class Word(object):
         self.clue = word_tuple[1]
 
     def __str__(self):
-        return self.text
+        return self.text+"-"+self.clue
 
 class Board(object):
     def __init__(self, shape, debug=False):
@@ -43,6 +45,7 @@ class Board(object):
         self.collision_list = []
         self.debug = debug
         self.iterations = 0
+        self.wordlist = []
 
     def add_coord(self, coord):
         self.coords.append(coord)
@@ -57,6 +60,18 @@ class Board(object):
                 print(ccoord)
     
     def print_board(self):
+        for row in self.shape:
+            print("|",end="")
+            for item in row:
+                if str(item)[0]=="X":
+                    print(" ",end="|")
+                else:
+                    print("-", end='|')
+            print()
+        print()
+
+    def print_solution(self):
+        #print the board
         for row in self.generated:
             print("|",end="")
             for item in row:
@@ -66,7 +81,15 @@ class Board(object):
                     print(str(item)[0], end='|')
             print()
         print()
-    
+
+        # print words
+        for word in self.wordlist[::-1]:
+            print(word.coord.get_number(), word.coord.get_direction(), "-", word.text)
+
+    def print_clues(self):
+        for word in self.wordlist[::-1]:
+            print(word.coord.get_number(), word.coord.get_direction(), "-", len(word.text), "letters -",word.clue)
+
     def print_iterations(self):
         if self.debug:
             print("Number of iterations:",self.iterations)
@@ -153,31 +176,27 @@ def generate_collisions(board, coord):
 
 def generate_crossword(board, wordlist):
     
-    #tried_words = set()
-
+    board.print_board()
+    generate_coordinates(board)
     generate_collisions(board, board.coords[0])
     colls = board.collision_list
-
     find_and_place(board,board,colls,wordlist)
+    board.print_clues()
 
-    #for coord in colls:
-        #print("c- ", coord)
     return board
     
 def find_and_place(board, new_board, collision_list, wordlist):
 
     if board.debug:
         board.iterations +=1
-
-    if board.debug and len(collision_list) > 0:
-        print("----------START --------------",collision_list[0],"LENGTH:",len(collision_list))
+        if len(collision_list) > 0:
+            print("----------START --------------",collision_list[0],"LENGTH:",len(collision_list))
 
     found = False
     copy = deepcopy(new_board)
 
     # we handled all collisions
     if collision_list==[]:
-        #print("MADE IT TO EMPTY LIST")
         board.generated = new_board.generated
         return True
 
@@ -199,7 +218,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
 
     if board.debug:
         print("constraints are:", constraints,"->",regex)
-        
+
     found_matches = [word for word in wordlist[len(constraints)-2] if re.match(regex, word[0]) is not None]
 
     random.shuffle(found_matches)
@@ -207,82 +226,55 @@ def find_and_place(board, new_board, collision_list, wordlist):
     for word in found_matches:
         # place the word down
         for x in range(collision_list[0].length):
-            #print(x)
-            #print(word[0][x])
-            #print(collision_list[0].start[0], " ", collision_list[0].start[1])
             if collision_list[0].vertical:
                 copy.generated[collision_list[0].start[0]+x][collision_list[0].start[1]] = word[0][x]
             else:
                 copy.generated[collision_list[0].start[0]][collision_list[0].start[1]+x] = word[0][x]
         
         if board.debug:
-            copy.print_board()
+            copy.print_solution()
+
         found = find_and_place(board,copy,collision_list[1:], wordlist)
+        # All iterations down this path worked, so confirm the word
         if found:
+
+            fitting_word = Word(collision_list[0], word)
+            board.wordlist.append(fitting_word)
+
             #print("-------------------------------------------------------------------- found")
             return True
         #print("Returning False for:",word)
     return False
 
-
-
+def import_words(filename, wordlist, has_definitions):
+    f = open(filename, "r")
+    lines = f.readlines()
+    if has_definitions:
+        for word, definition in zip(lines[0::2], lines[1::2]):
+            if len(word) <2 or len(word) > 20:
+                continue
+            wordlist[len(word.strip())-2].append((word.strip(),definition.strip()))
+    else:
+        definition = "Testing values"
+        for word in lines:
+            if len(word) <2 or len(word) > 20:
+                continue
+            wordlist[len(word.strip())-2].append((word.strip(),definition))
+    f.close()
 
 def main():
 
     # Wordlist is a 2d list of tuples
-    # 0 index is two letter words, max length of 16 letters at index 14
-    wordlist = [[] for x in range(15)]
+    # 0 index is two letter words
+    wordlist = [[] for x in range(20)]
 
     #----- Known solution to test5
-    filename = "nytimes.txt"
-    f=open(filename,'r')
-    definition = "Testing values"
-    lines = f.readlines()
-    for word in lines:
-        #print(word.strip())
-        wordlist[len(word.strip())-2].append((word.strip(),definition))
-    f.close()
-    #------------------------------
-
+    import_words("nytimes.txt", wordlist, False)
     # TODO: write known solution to test6
-
-    filename = "crosswordwords.txt"
-    f = open(filename, "r")
-
-    # This will import words without definitions
-    definition = "Testing values"
-    lines = f.readlines()
-    for word in lines:
-        wordlist[len(word.strip())-2].append((word.strip(),definition))
-    f.close()
-
-    #------------------------------
-    filename = "vocab.txt"
-    f = open(filename, "r")
-
-    # This will import words without definitions
-    lines = f.readlines()
-    for word, definition in zip(lines[0::2], lines[1::2]):
-        wordlist[len(word.strip())-2].append((word.strip(),definition.strip()))
-    f.close()
-
-    # words2 is 10k words ---------
-    filename = "words2.txt"
-    f = open(filename, "r")
-
-    # This will import words without definitions
-    definition = "Testing values"
-    lines = f.readlines()
-    for word in lines:
-        if len(word) <2 or len(word) > 14:
-            continue
-        wordlist[len(word.strip())-2].append((word.strip(),definition))
-    f.close()
-
-    # Sort all words within each wordlength
-    #for words in wordlist:
-        #words.sort()
-
+    import_words("crosswordwords.txt", wordlist, False)
+    import_words("vocab.txt", wordlist, True)
+    import_words("words2.txt", wordlist, False)
+    
 
     test = ["----x---",
             "----x---",
@@ -387,13 +379,55 @@ def main():
             ["-","X","-","-","-"],
             ["-","X","-","-","-"]]
 
+    
+    test7 = [["-","-","-","X","-"],
+            ["-","X","-","-","-"],
+            ["-","-","-","-","-"],
+            ["-","X","X","-","X"],
+            ["-","-","-","-","X"],
+            ["-","X","X","X","X"],
+            ["-","-","-","-","X"]]
 
-    crossword = Board(test4, True)
-    crossword.print_board()
-    generate_coordinates(crossword)
+    test8 = [["-","-","-","X","-","-","-","X","X","-"],
+            ["-","X","-","-","-","-","-","X","X","-"],
+            ["-","-","-","-","-","-","-","-","-","-"],
+            ["-","X","X","-","X","X","X","X","X","-"],
+            ["-","-","-","-","X","-","-","-","X","-"],
+            ["-","X","X","X","X","-","-","-","X","-"],
+            ["-","-","-","-","X","-","-","-","-","-"]]
+
+    test9 = [["-","-","-","X","-","-","-","X","X","-"],
+            ["-","X","-","-","-","-","-","X","X","-"],
+            ["-","-","-","-","-","-","-","-","-","-"],
+            ["-","X","X","-","X","X","X","X","X","-"],
+            ["-","-","-","-","X","-","-","-","X","-"],
+            ["-","X","-","X","X","-","X","X","X","-"],
+            ["-","X","-","X","X","-","-","-","X","-"],
+            ["-","X","-","X","X","-","-","-","X","-"],
+            ["-","X","X","X","X","-","-","-","X","-"],
+            ["-","-","-","-","X","-","-","-","-","-"]]
+
+    test10 = [["-","-","-","X","-","-","-","X","X","-"],
+            ["-","X","-","-","-","-","-","X","X","-"],
+            ["-","-","-","-","-","-","-","-","-","-"],
+            ["-","X","X","-","X","-","X","X","X","-"],
+            ["-","-","-","-","X","-","-","-","X","-"],
+            ["-","X","-","X","X","-","X","X","X","-"],
+            ["-","X","-","X","-","-","-","-","X","-"],
+            ["-","X","-","X","X","-","-","-","X","-"],
+            ["-","X","X","X","-","-","-","-","X","-"],
+            ["-","-","-","-","X","-","-","-","-","-"]]
+
+
+    crossword = Board(test9, True)
+    #crossword.print_board()
+    #generate_coordinates(crossword)
     generate_crossword(crossword, wordlist)    
-    crossword.print_board()
-    crossword.print_iterations()
+    crossword.print_solution()
+    #crossword.print_iterations()
+
+    #for word in crossword.wordlist:
+    #   print(word)
 
     print("Time taken:",time.time() - start_time)
 
