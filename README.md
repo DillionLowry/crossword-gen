@@ -1,16 +1,6 @@
 ﻿# crossword-gen
  
-Time complexity, worst case, is O(M^N)
 
-where N is the complexity of the puzzle - specifically the number of collisions between
-words. Sparse puzzles will have a low n value and dense NYTimes style puzzles
-will have a large n value
-
-M is the number of words in the wordbank. The actual value used will be M/A where A
-is an arbitrary value that is determined by the number of words in the wordbank that are the length
-of the word to be found.
- 
- Example of a puzzle with an N value of 41:
  
 |-|-|-| |-|-|-| | |-|
 |---|---|---|---|---|---|---|---|---|---|
