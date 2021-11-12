@@ -10,7 +10,7 @@ M is the number of words in the wordbank. The actual value used will be M/A wher
 is an arbitrary value that is determined by the number of words in the wordbank that are the length
 of the word to be found.
  
- Example of a puzzle with an N value of 60:
+ Example of a puzzle with an N value of 41:
  
 |-|-|-| |-|-|-| | |-|
 |---|---|---|---|---|---|---|---|---|---|
