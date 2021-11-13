@@ -95,13 +95,20 @@ class Board(object):
             print("Number of iterations:",self.iterations)
         else:
             print("Run in debug mode to track iterations")
+    
+    def print_complexity(self):
+        #for coord in self.coords:
+            #for col in coord.collisions
+
+        # divide by two because each coord saves it's collision with each other ex 1->2, 2->1
+        print("Complexity of this crossword:", int(sum(len(coord.collisions) for coord in self.coords)/2)+1)
+
 
 def generate_coordinates(crossword):
     num_rows = crossword.height
     num_cols = crossword.width
     horizontal_num = 1
     vertical_num = 1
-
 
     # find coords by row
     for r in range(num_rows):
@@ -128,10 +135,7 @@ def generate_coordinates(crossword):
                         start = None
                         end = None
                         continue
-                #print(r, "  ", c)
         
-    #print("---------------")
-
     # find coords by col
     for c in range(num_cols):
         start = None
@@ -161,7 +165,6 @@ def generate_coordinates(crossword):
                         start = None
                         end = None
                         continue
-            #print(r, "  ", c)
 
 # recursively gets collisions, typical usage starts at coords[0]
 def generate_collisions(board, coord):
@@ -182,6 +185,8 @@ def generate_crossword(board, wordlist):
     colls = board.collision_list
     find_and_place(board,board,colls,wordlist)
     board.print_clues()
+    if board.debug:
+        board.print_complexity()
 
     return board
     
@@ -217,7 +222,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
             regex+="."
 
     if board.debug:
-        print("constraints are:", constraints,"->",regex)
+        print("constraints are:", constraints,"->",regex, "Iteration:", board.iterations)
 
     found_matches = [word for word in wordlist[len(constraints)-2] if re.match(regex, word[0]) is not None]
 
@@ -234,21 +239,22 @@ def find_and_place(board, new_board, collision_list, wordlist):
         if board.debug:
             copy.print_solution()
 
+        # pass this iteration on and try to fit the next collision
         found = find_and_place(board,copy,collision_list[1:], wordlist)
+
         # All iterations down this path worked, so confirm the word
         if found:
-
             fitting_word = Word(collision_list[0], word)
             board.wordlist.append(fitting_word)
-
-            #print("-------------------------------------------------------------------- found")
             return True
-        #print("Returning False for:",word)
+        elif board.debug:
+            print("Returning False for:",word)
     return False
 
 def import_words(filename, wordlist, has_definitions):
     f = open(filename, "r")
     lines = f.readlines()
+
     if has_definitions:
         for word, definition in zip(lines[0::2], lines[1::2]):
             if len(word) <2 or len(word) > 20:
@@ -273,7 +279,7 @@ def main():
     # TODO: write known solution to test6
     import_words("crosswordwords.txt", wordlist, False)
     import_words("vocab.txt", wordlist, True)
-    import_words("words2.txt", wordlist, False)
+    #import_words("words2.txt", wordlist, False)
     
 
     test = ["----x---",
@@ -379,6 +385,29 @@ def main():
             ["-","X","-","-","-"],
             ["-","X","-","-","-"]]
 
+    mini4 = [["-","-","-","-","-"],
+            ["-","X","-","X","-"],
+            ["-","-","-","X","-"],
+            ["-","X","X","X","-"],
+            ["-","X","X","X","-"]]
+
+    mini5 = [["-","-","-","-","-"],
+            ["-","X","-","-","-"],
+            ["-","-","-","-","-"],
+            ["-","X","X","X","-"],
+            ["-","X","X","X","-"]]
+
+    
+    mini6 = [["-","-","-","-","-"],
+            ["-","X","X","X","-"],
+            ["-","X","X","X","-"],
+            ["-","X","X","X","-"],
+            ["-","X","X","X","-"]]
+    
+    mini7 = [["-","-","-"],
+             ["-","-","-"],
+             ["-","-","-"]]
+
     
     test7 = [["-","-","-","X","-"],
             ["-","X","-","-","-"],
@@ -420,14 +449,10 @@ def main():
 
 
     crossword = Board(test9, True)
-    #crossword.print_board()
-    #generate_coordinates(crossword)
-    generate_crossword(crossword, wordlist)    
+    generate_crossword(crossword, wordlist)
+    crossword.print_board()    
     crossword.print_solution()
-    #crossword.print_iterations()
-
-    #for word in crossword.wordlist:
-    #   print(word)
+    #print(sum(len(x)for x in wordlist))
 
     print("Time taken:",time.time() - start_time)
 
