@@ -97,8 +97,6 @@ class Board(object):
             print("Run in debug mode to track iterations")
     
     def print_complexity(self):
-        #for coord in self.coords:
-            #for col in coord.collisions
 
         # divide by two because each coord saves it's collision with each other ex 1->2, 2->1
         print("Complexity of this crossword:", int(sum(len(coord.collisions) for coord in self.coords)/2)+1)
@@ -191,7 +189,6 @@ def generate_crossword(board, wordlist):
     return board
     
 def find_and_place(board, new_board, collision_list, wordlist):
-
     if board.debug:
         board.iterations +=1
         if len(collision_list) > 0:
@@ -252,21 +249,56 @@ def find_and_place(board, new_board, collision_list, wordlist):
     return False
 
 def import_words(filename, wordlist, has_definitions):
-    f = open(filename, "r")
-    lines = f.readlines()
+    try:
+        f = open(filename, "r")
+        lines = f.readlines()
 
-    if has_definitions:
-        for word, definition in zip(lines[0::2], lines[1::2]):
-            if len(word) <2 or len(word) > 20:
-                continue
-            wordlist[len(word.strip())-2].append((word.strip(),definition.strip()))
-    else:
-        definition = "Testing values"
-        for word in lines:
-            if len(word) <2 or len(word) > 20:
-                continue
-            wordlist[len(word.strip())-2].append((word.strip(),definition))
-    f.close()
+        if has_definitions:
+            for word, definition in zip(lines[0::2], lines[1::2]):
+                if len(word) <2 or len(word) > 20:
+                    continue
+                wordlist[len(word.strip())-2].append((word.strip(),definition.strip()))
+        else:
+            definition = "Testing values"
+            for word in lines:
+                if len(word) <2 or len(word) > 20:
+                    continue
+                wordlist[len(word.strip())-2].append((word.strip(),definition))
+        f.close()
+    except Exception as e:
+        print(e)
+
+def import_shape(filename):
+    try:
+        with open(filename) as f:
+            lines = [line.rstrip() for line in f]
+
+        if len(lines) < 2 or is_jagged(lines):
+            print("The Puzzle is incorrectly drawn.")
+            exit()
+
+        if len(lines) > 50:
+            print("Warning: Puzzles this large may take a very, VERY, long time to finish.")
+        
+        shape = [[] for x in range(len(lines))]
+        for x in range(len(lines)):
+            for char in lines[x]:
+                shape[x].append(char)
+
+        return shape
+
+    except Exception as e:
+        print(e)
+
+def is_jagged(twod_list):
+    try:
+        for row in twod_list:
+            if len(row.strip()) != len(twod_list[0].strip()):
+                return True
+        return False
+    except Exception as e:
+        print(e)
+    
 
 def main():
 
@@ -448,11 +480,10 @@ def main():
             ["-","-","-","-","X","-","-","-","-","-"]]
 
 
-    crossword = Board(test9, True)
-    generate_crossword(crossword, wordlist)
-    crossword.print_board()    
+    shape = import_shape("test7.txt")
+    crossword = Board(shape, False)
+    generate_crossword(crossword, wordlist)   
     crossword.print_solution()
-    #print(sum(len(x)for x in wordlist))
 
     print("Time taken:",time.time() - start_time)
 
