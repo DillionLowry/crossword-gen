@@ -7,8 +7,8 @@ start_time = time.time()
 
 class Coord(object):
     def __init__(self, start, end, vert, num):
-        self.start = start
-        self.end = end
+        self.start = start  # tuple coordinate
+        self.end = end      # tuple coordinate
         self.length = (end[0] - start[0]) + (end[1] - start[1]) + 1
         self.vertical = vert
         self.number = num
@@ -37,8 +37,8 @@ class Word(object):
 
 class Board(object):
     def __init__(self, shape, debug=False):
-        self.shape = shape
-        self.generated = shape
+        self.shape = shape  # board layout with symbols
+        self.generated = shape  # board with
         self.coords = []
         self.width = len(shape[0])
         self.height = len(shape)
@@ -63,7 +63,7 @@ class Board(object):
         for row in self.shape:
             print("|",end="")
             for item in row:
-                if str(item)[0]=="X":
+                if str(item)[0]=="#":
                     print(" ",end="|")
                 else:
                     print("-", end='|')
@@ -75,7 +75,7 @@ class Board(object):
         for row in self.generated:
             print("|",end="")
             for item in row:
-                if str(item)[0]=="X":
+                if str(item)[0]=="#":
                     print(" ",end="|")
                 else:
                     print(str(item)[0], end='|')
@@ -116,8 +116,9 @@ def generate_coordinates(crossword):
             # start a new word
             if crossword.shape[r][c]=='-' and not start:
                 # it isn't just one character
-                if c+1 < num_cols and crossword.shape[r][c+1] != 'X':
+                if c+1 < num_cols and crossword.shape[r][c+1] != '#':
                     start = (r,c)
+                    # place the horizontal number to be used for collision checking
                     crossword.shape[r][c]=horizontal_num
                 else:
                     continue
@@ -125,7 +126,7 @@ def generate_coordinates(crossword):
             if start and not end:
                 crossword.shape[r][c]=horizontal_num
                 # This is the last letter
-                if (c+1==num_cols or crossword.shape[r][c+1]=='X'):
+                if (c+1==num_cols or crossword.shape[r][c+1]=='#'):
                         end = (r,c)
                         h_coord = Coord(start, end, False, horizontal_num)
                         crossword.add_coord(h_coord)
@@ -142,14 +143,14 @@ def generate_coordinates(crossword):
              # start a new word, either the across number or '-'
             if (isinstance(crossword.shape[r][c], int) or crossword.shape[r][c]=='-') and not start:
                 # it isn't just one character
-                if r+1 < num_rows and crossword.shape[r+1][c] != 'X':
+                if r+1 < num_rows and crossword.shape[r+1][c] != '#':
                     start = (r,c)
                 else:
                     continue
             # continue word
             if start and not end:
                 # This is the last letter
-                if (r+1==num_rows or crossword.shape[r+1][c]=='X'):
+                if (r+1==num_rows or crossword.shape[r+1][c]=='#'):
                         end = (r,c)
                         v_coord = Coord(start, end, True, vertical_num)
 
@@ -181,18 +182,21 @@ def generate_crossword(board, wordlist):
     generate_coordinates(board)
     generate_collisions(board, board.coords[0])
     colls = board.collision_list
-    find_and_place(board,board,colls,wordlist)
+    if not find_and_place(board,board,colls,wordlist):
+        print("Could not generate a crossword with the given wordlist")
+        exit()
     board.print_clues()
     if board.debug:
         board.print_complexity()
 
     return board
-    
+
+# recursively places words down until no more collision exist
 def find_and_place(board, new_board, collision_list, wordlist):
     if board.debug:
         board.iterations +=1
         if len(collision_list) > 0:
-            print("----------START --------------",collision_list[0],"LENGTH:",len(collision_list))
+            print("START:",collision_list[0],"LENGTH:",len(collision_list))
 
     found = False
     copy = deepcopy(new_board)
@@ -283,6 +287,7 @@ def import_shape(filename):
         shape = [[] for x in range(len(lines))]
         for x in range(len(lines)):
             for char in lines[x]:
+                #TODO: symbol checking
                 shape[x].append(char)
 
         return shape
@@ -306,181 +311,9 @@ def main():
     # 0 index is two letter words
     wordlist = [[] for x in range(20)]
 
-    #----- Known solution to test5
-    import_words("nytimes.txt", wordlist, False)
-    # TODO: write known solution to test6
-    import_words("crosswordwords.txt", wordlist, False)
-    import_words("vocab.txt", wordlist, True)
-    #import_words("words2.txt", wordlist, False)
-    
+    import_words("words10k.txt", wordlist, False)
 
-    test = ["----x---",
-            "----x---",
-            "--------",      
-            "xxxxx---",  
-            "-----xxx",   
-            "--------",
-            "----x---",
-            "----x---"
-            ]
-
-    test2 = ["----x---",
-            "----x---",
-            "--------",      
-            "xxxxx---",
-            ]
-
-    test3 = [["-","-","-","X","X","-","-","-"],
-            ["-","-","-","X","-","-","-","-"],
-            ["-","-","-","-","-","-","-","-"],
-            ["-","X","X","-","X","-","X","X"],
-            ["-","-","-","X","X","-","-","-"],
-            ["-","-","-","-","X","-","-","-"],
-            ["-","-","-","-","X","-","-","-"]]
-
-    test4 = [["-","-","-","X","X"],
-            ["-","X","X","-","-"],
-            ["-","-","-","-","-"],
-            ["-","X","X","-","X"],
-            ["-","-","-","-","X"],
-            ["-","X","X","X","X"],
-            ["-","-","-","-","X"]]
-
-    blank = [["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","-",]]
-
-
-    # https://www.nytimes.com/svc/crosswords/v2/puzzle/10386.ans.pdf
-    # FRI, Oct 9, 2015
-    test5 = [["-","-","-","-","X","X","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","-","X","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","X","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","-","-","-","X",],
-            ["-","-","-","-","-","-","-","X","X","X","X","-","-","-","-",],
-            ["X","X","X","-","-","-","X","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","-","-","X","-","-","-",],
-            ["-","-","-","X","-","-","-","-","-","-","-","X","-","-","-",],
-            ["-","-","-","X","-","-","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","X","-","-","-","X","X","X",],
-            ["-","-","-","-","X","X","X","X","-","-","-","-","-","-","-",],
-            ["X","-","-","-","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","X","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","X","-","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","X","X","-","-","-","-",]]
-
-    # https://www.washingtonpost.com/crossword-puzzles/daily/
-    # WED, Nov 10, 2021
-    test6 = [["-","-","-","-","-","X","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","-","X","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","X","-","-","-","-","-",],
-            ["-","-","-","X","-","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","-","X","X","X","X","-","-","-","-","-","-",],
-            ["-","-","-","-","-","X","-","-","-","-","X","X","-","-","-",],
-            ["X","X","X","-","-","-","-","-","-","-","-","-","X","X","X",],
-            ["-","-","-","X","X","-","-","-","-","X","-","-","-","-","-",],
-            ["-","-","-","-","-","-","X","X","X","X","-","-","-","-","-",],
-            ["-","-","-","-","-","-","-","-","-","-","-","X","-","-","-",],
-            ["X","-","-","-","-","X","-","-","-","-","X","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","-","-","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","X","-","-","-","-","-",],
-            ["-","-","-","-","X","-","-","-","-","X","-","-","-","-","-",]]
-
-    mini1 = [["X","-","-","-","-"],
-            ["X","-","-","-","-"],
-            ["-","-","-","-","-"],
-            ["-","-","-","-","-"],
-            ["-","-","-","-","-"]]
-
-    mini2 = [["-","-","-","-","X"],
-            ["-","-","-","-","X"],
-            ["-","-","-","-","-"],
-            ["X","-","-","-","-"],
-            ["X","-","-","-","-"]]
-
-    mini3 = [["-","-","-","-","-"],
-            ["-","X","-","-","-"],
-            ["-","X","-","-","-"],
-            ["-","X","-","-","-"],
-            ["-","X","-","-","-"]]
-
-    mini4 = [["-","-","-","-","-"],
-            ["-","X","-","X","-"],
-            ["-","-","-","X","-"],
-            ["-","X","X","X","-"],
-            ["-","X","X","X","-"]]
-
-    mini5 = [["-","-","-","-","-"],
-            ["-","X","-","-","-"],
-            ["-","-","-","-","-"],
-            ["-","X","X","X","-"],
-            ["-","X","X","X","-"]]
-
-    
-    mini6 = [["-","-","-","-","-"],
-            ["-","X","X","X","-"],
-            ["-","X","X","X","-"],
-            ["-","X","X","X","-"],
-            ["-","X","X","X","-"]]
-    
-    mini7 = [["-","-","-"],
-             ["-","-","-"],
-             ["-","-","-"]]
-
-    
-    test7 = [["-","-","-","X","-"],
-            ["-","X","-","-","-"],
-            ["-","-","-","-","-"],
-            ["-","X","X","-","X"],
-            ["-","-","-","-","X"],
-            ["-","X","X","X","X"],
-            ["-","-","-","-","X"]]
-
-    test8 = [["-","-","-","X","-","-","-","X","X","-"],
-            ["-","X","-","-","-","-","-","X","X","-"],
-            ["-","-","-","-","-","-","-","-","-","-"],
-            ["-","X","X","-","X","X","X","X","X","-"],
-            ["-","-","-","-","X","-","-","-","X","-"],
-            ["-","X","X","X","X","-","-","-","X","-"],
-            ["-","-","-","-","X","-","-","-","-","-"]]
-
-    test9 = [["-","-","-","X","-","-","-","X","X","-"],
-            ["-","X","-","-","-","-","-","X","X","-"],
-            ["-","-","-","-","-","-","-","-","-","-"],
-            ["-","X","X","-","X","X","X","X","X","-"],
-            ["-","-","-","-","X","-","-","-","X","-"],
-            ["-","X","-","X","X","-","X","X","X","-"],
-            ["-","X","-","X","X","-","-","-","X","-"],
-            ["-","X","-","X","X","-","-","-","X","-"],
-            ["-","X","X","X","X","-","-","-","X","-"],
-            ["-","-","-","-","X","-","-","-","-","-"]]
-
-    test10 = [["-","-","-","X","-","-","-","X","X","-"],
-            ["-","X","-","-","-","-","-","X","X","-"],
-            ["-","-","-","-","-","-","-","-","-","-"],
-            ["-","X","X","-","X","-","X","X","X","-"],
-            ["-","-","-","-","X","-","-","-","X","-"],
-            ["-","X","-","X","X","-","X","X","X","-"],
-            ["-","X","-","X","-","-","-","-","X","-"],
-            ["-","X","-","X","X","-","-","-","X","-"],
-            ["-","X","X","X","-","-","-","-","X","-"],
-            ["-","-","-","-","X","-","-","-","-","-"]]
-
-
-    shape = import_shape("test7.txt")
+    shape = import_shape("example1.txt")
     crossword = Board(shape, False)
     generate_crossword(crossword, wordlist)   
     crossword.print_solution()
