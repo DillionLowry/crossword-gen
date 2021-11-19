@@ -1,6 +1,32 @@
 ﻿# crossword-gen
- 
-Time complexity, worst case, is O(M<sup>N</sup>)
+Builds a crossword given a shape and a wordbank, if possible.
+
+Input: 
+1. File with the shape of the puzzle to be made (example shown below).
+
+2. File containing newline delimited words and their definitions.
+       
+Output: 
+1. The puzzle shape
+2. a completed puzzle
+3. a wordbank
+
+Example shape:
+```
+---#-
+-#---
+-----
+-##-#
+----#
+-####
+----#
+```
+The character '-' denotes where a letter will be placed (white space), while the character '#' denotes where a blank is placed (black space).
+
+
+Time complexity
+-------------
+worst case is O(M<sup>N</sup>)
 
 where N is the complexity of the puzzle - specifically the number of collisions between
 words + 1, with a minimum of N = number of words in the puzzle. Sparse puzzles will have a low n value and dense NYTimes style puzzles
