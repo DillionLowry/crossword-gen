@@ -3,6 +3,7 @@ import re
 import string
 from copy import deepcopy
 import time
+import argparse
 start_time = time.time()
 
 class Coord(object):
@@ -305,16 +306,26 @@ def is_jagged(twod_list):
         print(e)
     
 
-def main():
+def main(args):
+
+    if (args.s and args.w):
+        shapefile = args.s
+        wordfile = args.w
+        has_definitions = args.no_defs
+        debug_mode = args.debug
+    else:
+        print("Please include files. See '--help'")
+        exit()
+
 
     # Wordlist is a 2d list of tuples
     # 0 index is two letter words
     wordlist = [[] for x in range(20)]
 
-    import_words("words10k.txt", wordlist, False)
+    import_words(wordfile, wordlist, has_definitions)
 
-    shape = import_shape("example1.txt")
-    crossword = Board(shape, False)
+    shape = import_shape(shapefile)
+    crossword = Board(shape, debug_mode)
     generate_crossword(crossword, wordlist)   
     crossword.print_solution()
 
@@ -322,4 +333,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--s', type=str, help="File to import shape from")
+    parser.add_argument('--w', type=str, help="File to import wordbank from")
+    parser.add_argument('--no_defs', action='store_false', help="Wordbank does not include definitions")
+    parser.add_argument('--debug', action='store_true', help="Print additional information, including iterations")
+    args = parser.parse_args()
+    main(args)
