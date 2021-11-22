@@ -23,6 +23,17 @@ Example shape:
 ```
 The character '-' denotes where a letter will be placed (white space), while the character '#' denotes where a blank is placed (black space).
 
+Usage
+------------
+This program uses the argparse module for command line arguments.
+
+--s FILENAME -       Required - File to import shape from
+
+--w FILENAME -       Required - File to import wordbank from
+
+--no_defs -          (flag) Wordbank does not include definitions
+
+--debug -            (flag) Print additional information, including iterations
 
 Time complexity
 -------------
