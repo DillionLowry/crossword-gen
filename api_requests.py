@@ -1,10 +1,9 @@
 import json
 import requests
-from requests.auth import HTTPBasicAuth
-from urllib.parse import urlencode
 
 url = "https://www.xwordinfo.com/JSON/Data.aspx"
 
+# For whatever reason the API will not return data on a get without the "Referer" header
 my_headers = {
 "Accept": "*/*",
 "Accept-Encoding": "gzip, deflate, br",
@@ -13,8 +12,8 @@ my_headers = {
 "Host": "www.xwordinfo.com"
 }
 
-date = {"date":"9/11/2008"}
+date = "9/11/2008"
 
-res = requests.get(url, headers=my_headers, params=date)
+res = requests.get(url, headers=my_headers, params="date:"+date)
 data=res.json()
 print(data["answers"]["across"])
