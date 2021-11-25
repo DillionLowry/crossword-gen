@@ -255,7 +255,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
 
 def import_words(filename, wordlist, has_definitions):
     try:
-        f = open(filename, "r")
+        f = open(filename, "r", encoding="utf-8")
         lines = f.readlines()
 
         if has_definitions:
@@ -275,7 +275,7 @@ def import_words(filename, wordlist, has_definitions):
 
 def import_shape(filename):
     try:
-        with open(filename) as f:
+        with open(filename, encoding="utf-8") as f:
             lines = [line.rstrip() for line in f]
 
         if len(lines) < 2 or is_jagged(lines):
