@@ -262,13 +262,13 @@ def import_words(filename, wordlist, has_definitions):
             for word, definition in zip(lines[0::2], lines[1::2]):
                 if len(word) <2 or len(word) > 20:
                     continue
-                wordlist[len(word.strip())-2].append((word.strip(),definition.strip()))
+                wordlist[len(word.strip())-2].append((word.strip().lower(),definition.strip()))
         else:
             definition = "Testing values"
             for word in lines:
                 if len(word) <2 or len(word) > 20:
                     continue
-                wordlist[len(word.strip())-2].append((word.strip(),definition))
+                wordlist[len(word.strip())-2].append((word.strip().lower,definition))
         f.close()
     except Exception as e:
         print(e)
