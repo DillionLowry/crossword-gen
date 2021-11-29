@@ -271,7 +271,7 @@ def import_words(filename, wordlist, has_definitions):
                 wordlist[len(word.strip())-2].append((word.strip().lower,definition))
         f.close()
     except Exception as e:
-        print(e)
+        raise SystemExit(e)
 
 def import_shape(filename):
     try:
@@ -303,7 +303,7 @@ def is_jagged(twod_list):
                 return True
         return False
     except Exception as e:
-        print(e)
+        raise SystemExit(e)
     
 
 def main(args):
