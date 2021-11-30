@@ -1,17 +1,25 @@
 ﻿# crossword-gen
-Builds a crossword given a shape and a wordbank, if possible.
+Builds a crossword given a shape and a wordbank or through the use of the Xwordinfo API to fetch words from past NYT crosswords.
 
 Input: 
+-------
 1. File with the shape of the puzzle to be made (example shown below).
-
-2. File containing newline delimited words and their definitions.
+2. File containing newline delimited words and their definitions AND/OR --xword command
        
 Output: 
+------
 1. The puzzle shape
 2. a completed puzzle
 3. a wordbank
 
+API:
+-----
+More info on the xwordinfo API can be found here:
+https://www.xwordinfo.com/ and
+https://www.xwordinfo.com/JSON/
+
 Example shape:
+-------
 ```
 ---#-
 -#---
@@ -34,6 +42,12 @@ This program uses the argparse module for command line arguments.
 --no_defs -          (flag) Wordbank does not include definitions
 
 --debug -            (flag) Print additional information, including iterations
+
+ --xword * -         Import words from the Xcode Info API. Can be given start/end dates in format YYYY/MM/DD
+ 
+       Usage: --xword                     - 10 days of words starting at a random date
+              --xword STARTDATE           - 10 days of words starting at given date
+              --xword STARTDATE ENDDATE   - Get all words between the given dates
 
 Time complexity
 -------------
