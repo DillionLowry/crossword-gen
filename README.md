@@ -1,5 +1,5 @@
 ﻿# crossword-gen
-Builds a crossword given a shape and a wordbank or through the use of the Xwordinfo API to fetch words from past NYT crosswords.
+Builds a crossword given a shape and a wordbank or through the use of the XWord Info API to fetch words from past NYT crosswords.
 
 Input: 
 -------
@@ -14,7 +14,7 @@ Output:
 
 API:
 -----
-More info on the xwordinfo API can be found here:
+More info on the XWord Info API can be found here:
 https://www.xwordinfo.com/ and
 https://www.xwordinfo.com/JSON/
 
