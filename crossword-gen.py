@@ -318,7 +318,7 @@ def random_date():
 
 def main(args):
     # have the shape and either a wordbank or use the API
-    if (args.s and (args.w or args.xcode)):
+    if (args.s and (args.w or args.xword)):
         shapefile = args.s
         has_definitions = args.no_defs
         debug_mode = args.debug
@@ -333,23 +333,19 @@ def main(args):
     if args.w:
         wordfile = args.w
         import_words(wordfile, wordlist, has_definitions)
-    # word list from xcode info API
+    # word list from xword info API
     # start/end, just start, random
-    if args.xcode:
-        if len(args.xcode) > 2:
-            end = args.xcode[2]
+    if args.xword:
+        if len(args.xword) > 2:
+            end = args.xword[2]
         else:
             end = None
-        if len(args.xcode) > 1:
-            start = args.xcode[1]
+        if len(args.xword) > 1:
+            start = args.xword[1]
         else:
             start = random_date()
         xlist = api_requests.xword_get_words(start, end)
         wordlist = merge_lists(wordlist, xlist)
-
-    for x in wordlist[19]:
-        print (len(x))
-
 
     shape = import_shape(shapefile)
     crossword = Board(shape, debug_mode)
@@ -365,7 +361,7 @@ if __name__ == "__main__":
     parser.add_argument('--w', type=str, help="File to import wordbank from")
     parser.add_argument('--no_defs', action='store_false', help="Wordbank does not include definitions")
     parser.add_argument('--debug', action='store_true', help="Print additional information, including iterations")
-    parser.add_argument('--xcode', nargs='*', type=str, help="Import words from the Xcode Info API. You can put \
+    parser.add_argument('--xword', nargs='*', type=str, help="Import words from the Xcode Info API. You can put \
         a starting/ending date in the format YYYY/MM/DD or just a starting date to get that day + ten days after")
     args = parser.parse_args()
     main(args)
