@@ -319,16 +319,12 @@ def is_jagged(twod_list):
 
 def merge_lists(l1, l2):
     return [x+y for x,y in zip(l1,l2)]
-
-def random_date():
-    #TODO
-    return("1999/02/01")
     
 
-
 def main(args):
+
     # have the shape and either a wordbank or use the API
-    if (args.s and (args.w or args.xword)):
+    if (args.s and (args.w or args.xword is not None)):
         shapefile = args.s
         has_definitions = args.no_defs
         debug_mode = args.debug
@@ -347,7 +343,7 @@ def main(args):
 
     # word list from xword info API
     # start/end, just start, random
-    if args.xword:
+    if args.xword is not None:
         if len(args.xword) > 2:
             end = args.xword[2]
         else:
@@ -355,7 +351,7 @@ def main(args):
         if len(args.xword) > 1:
             start = args.xword[1]
         else:
-            start = random_date()
+            start = "random"
         xlist = api_requests.xword_get_words(start, end)
         wordlist = merge_lists(wordlist, xlist)
 
