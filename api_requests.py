@@ -1,11 +1,13 @@
 from copy import error
 import json
 from json import encoder
+from time import time
 import requests
 import html
-from datetime import timedelta, date
+from datetime import timedelta, date, datetime
 import re
 import sys
+import random
 # These functions interact with the xword info API
 # for more info see https://www.xwordinfo.com/JSON/
 
@@ -21,9 +23,7 @@ def daterange(date1, date2):
         yield date1 + timedelta(n)
 
 def create_date(date_str):
-
     try:
-
         reg = "^([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])(\.|-|/)([1-9]|0[1-9]|1[0-2])(\.|-|/)([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])$"
         if re.match(reg, date_str):
             # split the date and create a list of ints
@@ -39,6 +39,15 @@ def create_date(date_str):
         raise SystemExit(e)
 
 
+def random_date():
+    # return only dates in the "Shortz era"
+    start_date = date(1993,11,21)
+    end_date = date.today() - timedelta(days=10)
+    days_between = (end_date - start_date).days
+    rand_date = start_date + timedelta(days=(random.randrange(days_between)))
+    return(rand_date)
+
+
 # list parameters in format YYYY, MM, DD
 def xword_get_words(start_at, end_at=None):
     url = "https://www.xwordinfo.com/JSON/Data.aspx"
@@ -52,7 +61,10 @@ def xword_get_words(start_at, end_at=None):
     "Host": "www.xwordinfo.com"
     }
     try:
-        start_dt = create_date(start_at)
+        if start_at == "random":
+            start_dt = random_date()
+        else:
+            start_dt = create_date(start_at)
         if end_at is not None:
             end_dt = create_date(end_at)
         else:
