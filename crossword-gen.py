@@ -9,6 +9,8 @@ import api_requests
 
 start_time = time.time()
 
+# ---------------Classes---------------
+
 class Coord(object):
     def __init__(self, start, end, vert, num):
         self.start = start  # tuple coordinate
@@ -42,13 +44,13 @@ class Word(object):
 class Board(object):
     def __init__(self, shape, debug=False):
         self.shape = shape  # board layout with symbols
-        self.generated = shape  # board with
+        self.generated = shape  # board with words
         self.coords = []
         self.width = len(shape[0])
         self.height = len(shape)
         self.collision_list = []
         self.debug = debug
-        self.iterations = 0
+        self.iterations = 0 # how many recursions were needed to build
         self.wordlist = []
 
     def add_coord(self, coord):
@@ -102,9 +104,11 @@ class Board(object):
     
     def print_complexity(self):
 
-        # divide by two because each coord saves it's collision with each other ex 1->2, 2->1
+        # divide by two because each coord saves its collision with each other ex: 1->2, 2->1
         print("Complexity of this crossword:", int(sum(len(coord.collisions) for coord in self.coords)/2)+1)
 
+
+# ---------------FUNCTIONS---------------
 
 def generate_coordinates(crossword):
     num_rows = crossword.height
@@ -160,6 +164,7 @@ def generate_coordinates(crossword):
 
                         # collisions
                         for x in range(start[0],end[0]+1):
+                            # if the number of a row is found (ie collision) add to collision list
                             if (isinstance(crossword.shape[x][c], int)):
                                 crossword.coords[crossword.shape[x][c]-1].collisions.append(v_coord)
                                 v_coord.collisions.append(crossword.coords[crossword.shape[x][c]-1])
@@ -212,6 +217,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
 
     constraints = ""
     # only add the first character of the constraint in the case that it is a two+ digit number
+    # this number is the across word number that was used to make the collision list in generate_coordinates()
     for x in range(collision_list[0].length):
         if collision_list[0].vertical:
             constraints += str(copy.generated[collision_list[0].start[0]+x][collision_list[0].start[1]])[0]
@@ -219,6 +225,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
             constraints += str(copy.generated[collision_list[0].start[0]][collision_list[0].start[1]+x])[0]
 
     # Generate regex from the constraints
+    # example1: 1236 -> .... example2: 1CO9T -> .CO.T
     regex = ""
     for char in constraints:
         if char in string.ascii_lowercase:
@@ -256,6 +263,7 @@ def find_and_place(board, new_board, collision_list, wordlist):
             print("Returning False for:",word)
     return False
 
+# function to import wordlist from file
 def import_words(filename, wordlist, has_definitions):
     try:
         f = open(filename, "r", encoding="utf-8")
@@ -276,6 +284,7 @@ def import_words(filename, wordlist, has_definitions):
     except Exception as e:
         raise SystemExit(e)
 
+# function to check import shape of crossword puzzle from file
 def import_shape(filename):
     try:
         with open(filename, encoding="utf-8") as f:
@@ -316,6 +325,7 @@ def random_date():
     return("1999/02/01")
     
 
+
 def main(args):
     # have the shape and either a wordbank or use the API
     if (args.s and (args.w or args.xword)):
@@ -329,10 +339,12 @@ def main(args):
     # Wordlist is a 2d list of tuples
     # 0 index is two letter words
     wordlist = [[] for x in range(20)]
+
     # word list from file
     if args.w:
         wordfile = args.w
         import_words(wordfile, wordlist, has_definitions)
+
     # word list from xword info API
     # start/end, just start, random
     if args.xword:
