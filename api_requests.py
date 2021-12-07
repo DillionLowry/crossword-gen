@@ -24,6 +24,7 @@ def daterange(date1, date2):
 
 def create_date(date_str):
     try:
+        # this regex gets valid dates between 1900 and 2099
         reg = "^([0-9][0-9]|19[0-9][0-9]|20[0-9][0-9])(\.|-|/)([1-9]|0[1-9]|1[0-2])(\.|-|/)([1-9]|0[1-9]|1[0-9]|2[0-9]|3[0-1])$"
         if re.match(reg, date_str):
             # split the date and create a list of ints
@@ -42,6 +43,7 @@ def create_date(date_str):
 def random_date():
     # return only dates in the "Shortz era"
     start_date = date(1993,11,21)
+    # minus 10 because we return 10 days worth of words
     end_date = date.today() - timedelta(days=10)
     days_between = (end_date - start_date).days
     rand_date = start_date + timedelta(days=(random.randrange(days_between)))
@@ -75,7 +77,7 @@ def xword_get_words(start_at, end_at=None):
         for dt in daterange(start_dt, end_dt):
             curr_dt = dt.strftime("%m/%d/%Y")
 
-
+            # API request
             res = requests.get(url, headers=my_headers, params="date="+curr_dt)
             res.encoding='utf-8'
             data=res.json(encoding='utf-8')
