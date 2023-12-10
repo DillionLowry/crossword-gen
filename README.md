@@ -15,10 +15,11 @@ Output:
 API:
 -----
 More info on the XWord Info API can be found here:
-https://www.xwordinfo.com/ and
-https://www.xwordinfo.com/JSON/
+https://www.xwordinfo.com/ and https://www.xwordinfo.com/JSON/
+
 Note: Neither I nor xwordinfo own the data returned from the API. 
 Read more here: https://xwordblog.com/2021/03/11/can-i-have-your-data/
+
 Example shape:
 -------
 ```
